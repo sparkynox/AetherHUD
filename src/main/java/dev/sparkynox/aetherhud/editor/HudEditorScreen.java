@@ -10,12 +10,11 @@ import net.minecraft.text.Text;
 
 public class HudEditorScreen extends Screen {
 
-    private HudModule dragging    = null;
+    private HudModule dragging = null;
     private float dragOffX, dragOffY;
 
-    // right-click context menu state
-    private HudModule menuTarget  = null;
-    private int menuX, menuY;
+    // size of the hide button on each module
+    private static final int BTN_SIZE = 10;
 
     public HudEditorScreen() {
         super(Text.literal("AetherHUD Editor"));
@@ -23,11 +22,11 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // semi-dark overlay so you can see the game underneath
+        // dark overlay — keep game visible underneath
         ctx.fill(0, 0, width, height, 0x99000000);
 
-        // draw all modules
         for (HudModule mod : HudRenderer.modules) {
+            // draw module (even disabled = ghost card)
             ctx.getMatrices().push();
             ctx.getMatrices().translate(mod.x, mod.y, 0);
             ctx.getMatrices().scale(mod.scale, mod.scale, 1f);
@@ -35,101 +34,91 @@ public class HudEditorScreen extends Screen {
             if (mod.enabled) {
                 mod.render(ctx, delta);
             } else {
-                // show disabled modules as dim ghost card
                 drawGhost(ctx, mod);
             }
 
             ctx.getMatrices().pop();
 
-            // outline on hover or active drag
-            boolean hovered = isHovered(mod, mouseX, mouseY);
-            if (mod == dragging || hovered) {
-                int bx = (int) mod.x;
-                int by = (int) mod.y;
-                int bw = (int)(mod.getWidth()  * mod.scale);
-                int bh = (int)(mod.getHeight() * mod.scale);
-                AetherDraw.drawOutline(ctx, bx, by, bw, bh,
-                    mod.enabled ? 0xFF8B5CF6 : 0xFF555555);
+            // hover/drag outline
+            if (mod == dragging || isHoveredModule(mod, mouseX, mouseY)) {
+                AetherDraw.drawOutline(ctx,
+                    (int) mod.x, (int) mod.y,
+                    (int)(mod.getWidth()  * mod.scale),
+                    (int)(mod.getHeight() * mod.scale),
+                    mod.enabled ? 0xFF8B5CF6 : 0xFF444444);
             }
+
+            // draw the [-] hide/show button at top-right corner of every module
+            drawToggleBtn(ctx, mod, mouseX, mouseY);
         }
 
-        // right-click context menu
-        if (menuTarget != null) {
-            drawContextMenu(ctx, menuX, menuY);
-        }
-
-        // bottom hint bar
-        ctx.fill(0, height - 20, width, height, 0xCC0A0010);
+        // bottom bar
+        ctx.fill(0, height - 22, width, height, 0xDD050008);
         ctx.drawCenteredTextWithShadow(textRenderer,
-            "§5Drag§7 to move  §5Right-click§7 to toggle/scale  §5ESC§7 to save & close",
-            width / 2, height - 13, AetherDraw.WHITE);
+            "§5Drag§7 to move  §5[-]§7 to hide/show  §5Right-click§7 to scale  §5ESC§7 to save",
+            width / 2, height - 14, AetherDraw.WHITE);
+    }
+
+    // draws a small [-] or [+] button at the top-right of each module card
+    private void drawToggleBtn(DrawContext ctx, HudModule mod, int mouseX, int mouseY) {
+        int bx = (int)(mod.x + mod.getWidth() * mod.scale) - BTN_SIZE - 1;
+        int by = (int) mod.y + 1;
+
+        boolean hovering = mouseX >= bx && mouseX <= bx + BTN_SIZE
+            && mouseY >= by && mouseY <= by + BTN_SIZE;
+
+        // button bg
+        int bg = hovering ? 0xEE8B5CF6 : (mod.enabled ? 0xCC330044 : 0xCC222222);
+        ctx.fill(bx, by, bx + BTN_SIZE, by + BTN_SIZE, bg);
+        AetherDraw.drawOutline(ctx, bx, by, BTN_SIZE, BTN_SIZE, 0xFF8B5CF6);
+
+        // - symbol (hide) or + (show)
+        String sym = mod.enabled ? "-" : "+";
+        int tx = bx + (BTN_SIZE - textRenderer.getWidth(sym)) / 2;
+        int ty = by + (BTN_SIZE - textRenderer.fontHeight) / 2 + 1;
+        ctx.drawText(textRenderer, sym, tx, ty, AetherDraw.WHITE, false);
     }
 
     private void drawGhost(DrawContext ctx, HudModule mod) {
-        // just a dim rectangle placeholder for disabled modules
-        ctx.fill(0, 0, mod.getWidth(), mod.getHeight(), 0x44333333);
-        ctx.drawText(textRenderer, mod.id, 4, (mod.getHeight() - 8) / 2, 0xFF555555, false);
-    }
-
-    private void drawContextMenu(DrawContext ctx, int x, int y) {
-        int w = 100, h = 48;
-        // keep menu inside screen
-        if (x + w > width)  x = width  - w - 2;
-        if (y + h > height) y = height - h - 2;
-
-        ctx.fill(x, y, x + w, y + h, 0xEE0D0020);
-        AetherDraw.drawOutline(ctx, x, y, w, h, 0xFF8B5CF6);
-
-        // toggle button
-        String toggleLabel = menuTarget.enabled ? "§cDisable" : "§aEnable";
-        ctx.drawText(textRenderer, toggleLabel, x + 6, y + 6, AetherDraw.WHITE, false);
-
-        // scale buttons
-        ctx.drawText(textRenderer, "Scale:  §5[-]  §7" +
-            String.format("%.1f", menuTarget.scale) + "  §5[+]",
-            x + 6, y + 22, AetherDraw.WHITE, false);
-
-        ctx.drawText(textRenderer, "§7Click outside to close", x + 6, y + 36, 0xFF555555, false);
+        ctx.fill(0, 0, mod.getWidth(), mod.getHeight(), 0x33222222);
+        AetherDraw.drawOutline(ctx, 0, 0, mod.getWidth(), mod.getHeight(), 0x44555555);
+        ctx.drawText(textRenderer, mod.id, 4, (mod.getHeight() - 8) / 2, 0xFF444444, false);
     }
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
-        // close context menu if open and clicking outside
-        if (menuTarget != null) {
-            int x = menuX, y = menuY, w = 100, h = 48;
-            if (x + w > width)  x = width  - w - 2;
-            if (y + h > height) y = height - h - 2;
-
-            if (mx >= x && mx <= x + w && my >= y && my <= y + h) {
-                // inside menu — handle clicks
-                handleMenuClick((int) mx, (int) my, x, y);
-                return true;
-            } else {
-                menuTarget = null;
-                return true;
-            }
-        }
-
-        if (btn == 1) {
-            // right click — open context menu on hovered module
+        // check [-] buttons first (left click only)
+        if (btn == 0) {
             for (HudModule mod : HudRenderer.modules) {
-                if (isHovered(mod, (int) mx, (int) my)) {
-                    menuTarget = mod;
-                    menuX = (int) mx;
-                    menuY = (int) my;
+                if (isHoveredBtn(mod, (int) mx, (int) my)) {
+                    mod.enabled = !mod.enabled;
                     return true;
                 }
             }
         }
 
+        // right click = scale menu (quick inline)
+        if (btn == 1) {
+            for (HudModule mod : HudRenderer.modules) {
+                if (isHoveredModule(mod, (int) mx, (int) my)) {
+                    // cycle scale: 0.75 → 1.0 → 1.25 → 1.5 → 0.75
+                    if (mod.scale < 0.9f)       mod.scale = 1.0f;
+                    else if (mod.scale < 1.15f)  mod.scale = 1.25f;
+                    else if (mod.scale < 1.4f)   mod.scale = 1.5f;
+                    else                          mod.scale = 0.75f;
+                    return true;
+                }
+            }
+        }
+
+        // left click on module body = start drag
         if (btn == 0) {
-            // left click — start drag
             for (HudModule mod : HudRenderer.modules) {
                 if (!mod.enabled) continue;
-                if (isHovered(mod, (int) mx, (int) my)) {
-                    dragging  = mod;
-                    dragOffX  = (float)(mx - mod.x);
-                    dragOffY  = (float)(my - mod.y);
+                if (isHoveredModule(mod, (int) mx, (int) my)) {
+                    dragging = mod;
+                    dragOffX = (float)(mx - mod.x);
+                    dragOffY = (float)(my - mod.y);
                     return true;
                 }
             }
@@ -138,33 +127,11 @@ public class HudEditorScreen extends Screen {
         return super.mouseClicked(mx, my, btn);
     }
 
-    private void handleMenuClick(int mx, int my, int menuOriginX, int menuOriginY) {
-        if (menuTarget == null) return;
-
-        // toggle row — y range 2..18
-        if (my >= menuOriginY + 2 && my <= menuOriginY + 18) {
-            menuTarget.enabled = !menuTarget.enabled;
-            menuTarget = null;
-            return;
-        }
-
-        // scale row — y range 18..34
-        if (my >= menuOriginY + 18 && my <= menuOriginY + 34) {
-            // [-] is roughly x+42..x+54, [+] is x+70..x+82
-            if (mx >= menuOriginX + 42 && mx <= menuOriginX + 54) {
-                menuTarget.scale = Math.max(0.5f, menuTarget.scale - 0.1f);
-            } else if (mx >= menuOriginX + 70 && mx <= menuOriginX + 82) {
-                menuTarget.scale = Math.min(3.0f, menuTarget.scale + 0.1f);
-            }
-        }
-    }
-
     @Override
     public boolean mouseDragged(double mx, double my, int btn, double dx, double dy) {
         if (dragging != null && btn == 0) {
             float nx = (float)(mx - dragOffX);
             float ny = (float)(my - dragOffY);
-            // clamp inside screen
             nx = Math.max(0, Math.min(nx, width  - (int)(dragging.getWidth()  * dragging.scale)));
             ny = Math.max(0, Math.min(ny, height - (int)(dragging.getHeight() * dragging.scale)));
             dragging.x = dragging.targetX = nx;
@@ -187,14 +154,21 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
-        return false; // game keeps running while editor is open
-    }
+    public boolean shouldPause() { return false; }
 
-    private boolean isHovered(HudModule mod, int mx, int my) {
+    // checks if mouse is over the module card area
+    private boolean isHoveredModule(HudModule mod, int mx, int my) {
         int bw = (int)(mod.getWidth()  * mod.scale);
         int bh = (int)(mod.getHeight() * mod.scale);
         return mx >= mod.x && mx <= mod.x + bw
             && my >= mod.y && my <= mod.y + bh;
+    }
+
+    // checks if mouse is over the [-] button specifically
+    private boolean isHoveredBtn(HudModule mod, int mx, int my) {
+        int bx = (int)(mod.x + mod.getWidth() * mod.scale) - BTN_SIZE - 1;
+        int by = (int) mod.y + 1;
+        return mx >= bx && mx <= bx + BTN_SIZE
+            && my >= by && my <= by + BTN_SIZE;
     }
 }

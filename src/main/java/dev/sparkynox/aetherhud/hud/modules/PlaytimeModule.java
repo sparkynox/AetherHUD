@@ -6,31 +6,24 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 
 public class PlaytimeModule extends HudModule {
-
-    private static final long startTime = System.currentTimeMillis();
-
-    public PlaytimeModule(float x, float y) {
-        super("playtime", x, y);
-    }
+    private static final long START = System.currentTimeMillis();
+    public PlaytimeModule(float x, float y) { super("playtime", x, y); }
 
     @Override
     public void render(DrawContext ctx, float tickDelta) {
         var font = MinecraftClient.getInstance().textRenderer;
-
-        long elapsed = (System.currentTimeMillis() - startTime) / 1000;
-        long hours   = elapsed / 3600;
-        long mins    = (elapsed % 3600) / 60;
-        long secs    = elapsed % 60;
-
-        String time = hours > 0
-            ? String.format("%dh %02dm", hours, mins)
-            : String.format("%02d:%02d", mins, secs);
+        long s = (System.currentTimeMillis() - START) / 1000;
+        String t = s >= 3600
+            ? String.format("%dh%02dm", s/3600, (s%3600)/60)
+            : String.format("%02d:%02d", s/60, s%60);
 
         AetherDraw.drawCard(ctx, 0, 0, getWidth(), getHeight());
         AetherDraw.drawAccent(ctx, 0, 0, getHeight());
-        AetherDraw.drawLabelValue(ctx, font, "SESSION", time, 6, 3);
+        AetherDraw.drawIconClock(ctx, 5, 5, AetherDraw.PURPLE);
+        ctx.drawText(font, "SESSION", 16, 2,  AetherDraw.LABEL, false);
+        ctx.drawText(font, t,         16, 11, AetherDraw.VALUE, false);
     }
 
-    @Override public int getWidth()  { return 80; }
-    @Override public int getHeight() { return 26; }
+    @Override public int getWidth()  { return 66; }
+    @Override public int getHeight() { return 20; }
 }

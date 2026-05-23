@@ -1,4 +1,4 @@
-# AetherHUD
+# AetherHUD 
 
 > Simple. Clean. Powerful.
 
