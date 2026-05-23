@@ -2,38 +2,35 @@ package dev.sparkynox.aetherhud.hud;
 
 import dev.sparkynox.aetherhud.hud.modules.*;
 import net.minecraft.client.gui.DrawContext;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class HudRenderer {
 
     public static final List<HudModule> modules = new ArrayList<>();
-
-    // exposed so MouseMixin can reach it directly
     public static CpsModule cpsModule;
 
     public static void init() {
-        cpsModule = new CpsModule(10, 74);
+        cpsModule = new CpsModule(10, 50);
 
-        // --- left side stack (default positions) ---
+        // ── Left stack — compact 22px rows (20px card + 2px gap) ──
         modules.add(new FpsModule(10, 10));
-        modules.add(new PingModule(10, 42));
-        modules.add(cpsModule);
-        modules.add(new ArmorModule(10, 106));
-        modules.add(new CoordinatesModule(10, 138));
-        modules.add(new DirectionModule(10, 170));
-        modules.add(new SpeedModule(10, 202));
+        modules.add(new PingModule(10, 32));  // 10 + 20 + 2
+        modules.add(cpsModule);               // 32 + 20 - 2 = 50... adjusted
+        modules.add(new ArmorModule(10, 72));
+        modules.add(new CoordinatesModule(10, 94));
+        modules.add(new DirectionModule(10, 116));
+        modules.add(new SpeedModule(10, 138));
 
-        // --- combat modules (top right area by default) ---
-        modules.add(new ComboModule(250, 10));
-        modules.add(new TargetHudModule(250, 42));
-        modules.add(new ReachModule(250, 72));
+        // ── Right side — combat cluster ──
+        modules.add(new ComboModule(230, 10));
+        modules.add(new TargetHudModule(220, 32));
+        modules.add(new ReachModule(230, 52));
 
-        // --- misc ---
-        modules.add(new KeystrokesModule(10, 240));
-        modules.add(new PlaytimeModule(10, 284));
-        modules.add(new PotionModule(10, 316));
+        // ── Bottom-left — utility ──
+        modules.add(new KeystrokesModule(10, 200));
+        modules.add(new PlaytimeModule(10, 252));
+        modules.add(new PotionModule(10, 274));
     }
 
     public static void renderAll(DrawContext ctx, float tickDelta) {
