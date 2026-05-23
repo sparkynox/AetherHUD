@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "dev.sparkynox.aetherhud.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "InGameHudMixin",
+    "MouseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

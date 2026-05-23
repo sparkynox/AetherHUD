@@ -1,1 +1,30 @@
-
+{
+  "schemaVersion": 1,
+  "id": "aetherhud",
+  "version": "${version}",
+  "name": "AetherHUD",
+  "description": "Simple. Clean. Powerful. PvP HUD for Minecraft.",
+  "authors": [
+    "SparkyNox"
+  ],
+  "contact": {
+    "sources": "https://github.com/sparkynox/aetherhud",
+    "modrinth": "https://modrinth.com/user/sparkynox"
+  },
+  "license": "MIT",
+  "icon": "assets/aetherhud/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.sparkynox.aetherhud.AetherHUD"
+    ]
+  },
+  "mixins": [
+    "aetherhud.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "fabric-api": "*",
+    "minecraft": "~1.21.4"
+  }
+}
