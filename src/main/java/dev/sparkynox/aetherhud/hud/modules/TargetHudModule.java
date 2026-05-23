@@ -9,51 +9,47 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 
 public class TargetHudModule extends HudModule {
-
     private float smoothHp = 0f;
-
-    public TargetHudModule(float x, float y) {
-        super("target", x, y);
-    }
+    public TargetHudModule(float x, float y) { super("target", x, y); }
 
     @Override
     public void render(DrawContext ctx, float tickDelta) {
         var client = MinecraftClient.getInstance();
         if (client.crosshairTarget == null) return;
         if (client.crosshairTarget.getType() != HitResult.Type.ENTITY) return;
-
         var hit = (EntityHitResult) client.crosshairTarget;
         if (!(hit.getEntity() instanceof LivingEntity target)) return;
 
-        var font = client.textRenderer;
-        float hp = target.getHealth();
-        float maxHp = target.getMaxHealth();
+        var font  = client.textRenderer;
+        float hp  = target.getHealth();
+        float max = target.getMaxHealth();
         smoothHp += (hp - smoothHp) * 0.12f;
+
+        String name = target.getName().getString();
+        // trim long names so they don't overflow
+        if (font.getWidth(name) > getWidth() - 28)
+            name = font.trimToWidth(name, getWidth() - 32) + "…";
 
         AetherDraw.drawCard(ctx, 0, 0, getWidth(), getHeight());
         AetherDraw.drawAccent(ctx, 0, 0, getHeight());
-        AetherDraw.drawIconHeart(ctx, 5, 10, AetherDraw.PURPLE);
+        AetherDraw.drawIconHeart(ctx, 5, 5, AetherDraw.PURPLE);
 
-        ctx.drawText(font, target.getName().getString(), 17, 5, AetherDraw.WHITE, false);
+        ctx.drawText(font, name, 16, 2, AetherDraw.WHITE, false);
 
-        // hp bar
-        int bx = 17, by = 17, bw = getWidth() - 22, bh = 4;
-        ctx.fill(bx, by, bx + bw, by + bh, 0xFF1A0020);
-        float ratio = Math.min(1f, smoothHp / maxHp);
+        // compact hp bar — 3px tall, tight under the name
+        int bx = 16, by = 13, bw = getWidth() - 20, bh = 3;
+        ctx.fill(bx, by, bx + bw, by + bh, 0xFF160020);
+        float ratio = Math.min(1f, smoothHp / max);
         int fw = (int)(bw * ratio);
-        if (fw > 0) ctx.fill(bx, by, bx + fw, by + bh, hpColor(ratio));
-
-        // hp text right side
-        String hpStr = String.format("%.0f", hp);
-        ctx.drawText(font, hpStr, bx + bw - font.getWidth(hpStr), 5, AetherDraw.LABEL, false);
+        if (fw > 0) {
+            int col = ratio > 0.6f ? 0xFF4ADE80 : ratio > 0.3f ? 0xFFFBBF24 : 0xFFF87171;
+            ctx.fill(bx, by, bx + fw, by + bh, col);
+        }
+        // hp fraction right-aligned
+        String hps = String.format("%.0f", hp);
+        ctx.drawText(font, hps, bx + bw - font.getWidth(hps), 2, AetherDraw.LABEL, false);
     }
 
-    private int hpColor(float r) {
-        if (r > 0.6f) return 0xFF22C55E;
-        if (r > 0.3f) return 0xFFEAB308;
-        return 0xFFEF4444;
-    }
-
-    @Override public int getWidth()  { return 110; }
-    @Override public int getHeight() { return 26; }
+    @Override public int getWidth()  { return 100; }
+    @Override public int getHeight() { return 18; }
 }
