@@ -18,27 +18,25 @@ import org.lwjgl.glfw.GLFW;
 public class AetherHUD implements ClientModInitializer {
 
     public static final String MOD_ID = "aetherhud";
-
     public static KeyBinding editorKey;
 
     @Override
     public void onInitializeClient() {
-        HudRenderer.init();
-        HudConfig.load();
-
-        // Register our textures as a built-in resource pack with ALWAYS_ENABLED.
-        // This makes our gui textures override:
-        //   1. Vanilla default textures
-        //   2. ANY user-installed resource/texture pack
-        // Because built-in mod packs load at highest priority in the pack stack.
-        FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent(container -> {
+        // Resource pack registration must happen before HudRenderer.init()
+        // Fabric looks for the pack at: assets/<modid>/resourcepacks/<pack-name>/
+        // So our folder is:            assets/aetherhud/resourcepacks/aetherhud-textures/
+        // The Identifier path segment ("aetherhud-textures") must match the folder name exactly.
+        FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent(container ->
             ResourceManagerHelper.registerBuiltinResourcePack(
-                Identifier.of(MOD_ID, "aetherhud-textures"), // must match folder name in /resourcepacks/
+                Identifier.of(MOD_ID, "aetherhud-textures"),
                 container,
                 Text.literal("AetherHUD Textures"),
-                ResourcePackActivationType.ALWAYS_ENABLED    // force-enabled, user can't disable
-            );
-        });
+                ResourcePackActivationType.ALWAYS_ENABLED
+            )
+        );
+
+        HudRenderer.init();
+        HudConfig.load();
 
         editorKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.aetherhud.editor",
