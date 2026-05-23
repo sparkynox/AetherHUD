@@ -24,11 +24,18 @@ public class PingModule extends HudModule {
             if (entry != null) ping = entry.getLatency();
         }
 
+        // color shifts based on ping quality
+        int pingColor = ping < 80 ? 0xFF22C55E : ping < 150 ? 0xFFEAB308 : 0xFFEF4444;
+
         AetherDraw.drawCard(ctx, 0, 0, getWidth(), getHeight());
         AetherDraw.drawAccent(ctx, 0, 0, getHeight());
-        AetherDraw.drawLabelValue(ctx, font, "PING", ping + "ms", 6, 4);
+
+        AetherDraw.drawIconSignal(ctx, 5, 10, AetherDraw.PURPLE);
+
+        ctx.drawText(font, "PING", 17, 5, AetherDraw.LABEL, false);
+        ctx.drawText(font, ping + " ms", 17, 15, pingColor, false);
     }
 
-    @Override public int getWidth()  { return 64; }
-    @Override public int getHeight() { return 26; }
+    @Override public int getWidth()  { return 66; }
+    @Override public int getHeight() { return 28; }
 }

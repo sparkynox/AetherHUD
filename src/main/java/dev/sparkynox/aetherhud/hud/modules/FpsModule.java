@@ -13,14 +13,21 @@ public class FpsModule extends HudModule {
 
     @Override
     public void render(DrawContext ctx, float tickDelta) {
-        var font = MinecraftClient.getInstance().textRenderer;
-        int fps = MinecraftClient.getInstance().getCurrentFps();
+        var client = MinecraftClient.getInstance();
+        var font = client.textRenderer;
+        int fps = client.getCurrentFps();
 
         AetherDraw.drawCard(ctx, 0, 0, getWidth(), getHeight());
         AetherDraw.drawAccent(ctx, 0, 0, getHeight());
-        AetherDraw.drawLabelValue(ctx, font, "FPS", String.valueOf(fps), 6, 4);
+
+        // feather icon at left
+        AetherDraw.drawIconFeather(ctx, 5, 9, AetherDraw.PURPLE);
+
+        // FPS label + value
+        ctx.drawText(font, "FPS", 17, 5, AetherDraw.LABEL, false);
+        ctx.drawText(font, String.valueOf(fps), 17, 15, AetherDraw.VALUE, false);
     }
 
-    @Override public int getWidth()  { return 54; }
-    @Override public int getHeight() { return 26; }
+    @Override public int getWidth()  { return 58; }
+    @Override public int getHeight() { return 28; }
 }

@@ -4,7 +4,6 @@ import dev.sparkynox.aetherhud.hud.AetherDraw;
 import dev.sparkynox.aetherhud.hud.HudModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.Direction;
 
 public class DirectionModule extends HudModule {
 
@@ -16,27 +15,21 @@ public class DirectionModule extends HudModule {
     public void render(DrawContext ctx, float tickDelta) {
         var client = MinecraftClient.getInstance();
         if (client.player == null) return;
-
         var font = client.textRenderer;
 
-        // yaw → cardinal direction
         float yaw = client.player.getYaw() % 360f;
         if (yaw < 0) yaw += 360f;
 
         String facing = getFacing(yaw);
-        String yawStr = String.format("%.0f°", yaw);
+        String dir = client.player.getHorizontalFacing().getName().toUpperCase();
 
         AetherDraw.drawCard(ctx, 0, 0, getWidth(), getHeight());
         AetherDraw.drawAccent(ctx, 0, 0, getHeight());
 
-        // big direction label
-        ctx.drawText(font, facing, 6, 3, AetherDraw.VALUE, false);
-        // yaw degrees smaller next to it
-        ctx.drawText(font, yawStr, 6 + font.getWidth(facing) + 3, 3, AetherDraw.LABEL, false);
+        AetherDraw.drawIconCompass(ctx, 5, 10, AetherDraw.PURPLE);
 
-        // minecraft facing name (for nether fortress hunting etc)
-        Direction dir = client.player.getHorizontalFacing();
-        ctx.drawText(font, dir.getName().toUpperCase(), 6, 13, 0xFF888888, false);
+        ctx.drawText(font, facing + "  " + String.format("%.0f", yaw) + "°", 17, 5, AetherDraw.VALUE, false);
+        ctx.drawText(font, dir, 17, 15, AetherDraw.LABEL, false);
     }
 
     private String getFacing(float yaw) {
@@ -50,6 +43,6 @@ public class DirectionModule extends HudModule {
         return "SE";
     }
 
-    @Override public int getWidth()  { return 70; }
-    @Override public int getHeight() { return 26; }
+    @Override public int getWidth()  { return 72; }
+    @Override public int getHeight() { return 28; }
 }

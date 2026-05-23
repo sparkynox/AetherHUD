@@ -21,15 +21,17 @@ public class ReachModule extends HudModule {
 
         var hit = (EntityHitResult) client.crosshairTarget;
         double dist = client.player.distanceTo(hit.getEntity());
-
         var font = client.textRenderer;
-        String val = String.format("%.2f", dist) + "b";
 
         AetherDraw.drawCard(ctx, 0, 0, getWidth(), getHeight());
         AetherDraw.drawAccent(ctx, 0, 0, getHeight());
-        AetherDraw.drawLabelValue(ctx, font, "REACH", val, 6, 3);
+
+        AetherDraw.drawIconReach(ctx, 5, 10, AetherDraw.PURPLE);
+
+        ctx.drawText(font, "REACH", 17, 5, AetherDraw.LABEL, false);
+        ctx.drawText(font, String.format("%.2f", dist) + "b", 17, 15, AetherDraw.VALUE, false);
     }
 
-    @Override public int getWidth()  { return 70; }
-    @Override public int getHeight() { return 26; }
+    @Override public int getWidth()  { return 72; }
+    @Override public int getHeight() { return 28; }
 }
