@@ -11,26 +11,27 @@ public class HudRenderer {
     public static CpsModule cpsModule;
 
     public static void init() {
-        cpsModule = new CpsModule(10, 50);
+        cpsModule = new CpsModule(10, 54);
 
-        // ── Left stack — compact 22px rows (20px card + 2px gap) ──
+        // All modules default to visible positions on a ~854x480 screen
+        // Left column — info stack, 22px per row (20px card + 2px gap)
         modules.add(new FpsModule(10, 10));
-        modules.add(new PingModule(10, 32));  // 10 + 20 + 2
-        modules.add(cpsModule);               // 32 + 20 - 2 = 50... adjusted
-        modules.add(new ArmorModule(10, 72));
-        modules.add(new CoordinatesModule(10, 94));
-        modules.add(new DirectionModule(10, 116));
-        modules.add(new SpeedModule(10, 138));
+        modules.add(new PingModule(10, 32));
+        modules.add(cpsModule);                       // y=54
+        modules.add(new CoordinatesModule(10, 76));
+        modules.add(new DirectionModule(10, 98));
+        modules.add(new SpeedModule(10, 120));
+        modules.add(new ArmorModule(10, 142));
 
-        // ── Right side — combat cluster ──
-        modules.add(new ComboModule(230, 10));
-        modules.add(new TargetHudModule(220, 32));
-        modules.add(new ReachModule(230, 52));
+        // Bottom-left
+        modules.add(new KeystrokesModule(10, 300));
+        modules.add(new PlaytimeModule(10, 354));
+        modules.add(new PotionModule(10, 376));
 
-        // ── Bottom-left — utility ──
-        modules.add(new KeystrokesModule(10, 200));
-        modules.add(new PlaytimeModule(10, 252));
-        modules.add(new PotionModule(10, 274));
+        // Right column — combat
+        modules.add(new ComboModule(700, 10));
+        modules.add(new TargetHudModule(680, 32));
+        modules.add(new ReachModule(700, 54));
     }
 
     public static void renderAll(DrawContext ctx, float tickDelta) {
